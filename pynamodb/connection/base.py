@@ -20,6 +20,8 @@ from botocore.vendored import requests
 from botocore.vendored.requests import Request
 from six.moves import range
 
+from amazondax import AmazonDaxClient
+
 from pynamodb.compat import NullHandler
 from pynamodb.connection.util import pythonic
 from pynamodb.constants import (
@@ -223,7 +225,7 @@ class Connection(object):
     """
 
     def __init__(self, region=None, host=None, session_cls=None,
-                 request_timeout_seconds=None, max_retry_attempts=None, base_backoff_ms=None):
+                 request_timeout_seconds=None, max_retry_attempts=None, base_backoff_ms=None, dax_endpoint=None):
         self._tables = {}
         self.host = host
         self._local = local()
@@ -253,6 +255,8 @@ class Connection(object):
             self._base_backoff_ms = base_backoff_ms
         else:
             self._base_backoff_ms = get_settings_value('base_backoff_ms')
+
+        self.dax_endpoint = dax_endpoint
 
     def __repr__(self):
         return six.u("Connection<{0}>".format(self.client.meta.endpoint_url))
@@ -484,7 +488,10 @@ class Connection(object):
         # if the client does not have credentials, we create a new client
         # otherwise the client is permanently poisoned in the case of metadata service flakiness when using IAM roles
         if not self._client or (self._client._request_signer and not self._client._request_signer._credentials):
-            self._client = self.session.create_client(SERVICE_NAME, self.region, endpoint_url=self.host)
+            if not self.dax_endpoint:
+                self._client = self.session.create_client(SERVICE_NAME, self.region, endpoint_url=self.host)
+            else:
+                self._client = AmazonDaxClient(self.session, region_name=self.region, endpoints=[self.dax_endpoint])
         return self._client
 
     def get_meta_table(self, table_name, refresh=False):
