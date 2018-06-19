@@ -1295,7 +1295,7 @@ class Model(AttributeContainer):
                                               base_backoff_ms=cls.Meta.base_backoff_ms,
                                               aws_access_key_id=cls.Meta.aws_access_key_id,
                                               aws_secret_access_key=cls.Meta.aws_secret_access_key,
-                                              dax_endpoints=cls.Meta.dax_endpoint)
+                                              dax_endpoints=cls.Meta.dax_endpoints)
         return cls._connection
 
     def _deserialize(self, attrs):
