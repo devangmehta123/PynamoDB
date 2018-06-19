@@ -488,9 +488,9 @@ class Connection(object):
         # if the client does not have credentials, we create a new client
         # otherwise the client is permanently poisoned in the case of metadata service flakiness when using IAM roles
         if not self._client or (self._client._request_signer and not self._client._request_signer._credentials):
-            if not self.dax_endpoints:
-                self._client = self.session.create_client(SERVICE_NAME, self.region, endpoint_url=self.host)
-            else:
+            # TODO: does the normal dynamodb client need to be created for dax client to be created successfully?
+            self._client = self.session.create_client(SERVICE_NAME, self.region, endpoint_url=self.host)
+            if self.dax_endpoints:
                 self._client = AmazonDaxClient(self.session, region_name=self.region, endpoints=self.dax_endpoints)
         return self._client
 
